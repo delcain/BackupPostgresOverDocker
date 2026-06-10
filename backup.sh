@@ -9,4 +9,3 @@ source "$SCRIPT_DIR/venv/bin/activate"
 
 # Executa o script Python
 python "$SCRIPT_DIR/postgres_backup.py"
-

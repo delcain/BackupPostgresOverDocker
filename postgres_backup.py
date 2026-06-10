@@ -34,8 +34,14 @@ def rotate_backups():
 for container in client.containers.list():
     try:
         image = container.image.tags[0] if container.image.tags else ""
-        if "postgres" not in image.lower():
-            continue  # ignora containers que não são postgres
+        image_lower = image.lower()
+
+        if not ("postgres" in image_lower or "pgvector" in image_lower):
+            continue  # ignora containers que não são postgres/pgvector
+
+        print(f"📦 Processando container: {container.name} ({image})")
+
+
 
         # Extrai variáveis
         envs = container.attrs['Config']['Env']
@@ -48,7 +54,7 @@ for container in client.containers.list():
                 backup_dir,
                 f"{container.name}_{db_name}_{datetime.now():%Y%m%d%H%M}.sql"
             )
-            cmd = ["docker", "exec", container.id[:12], "pg_dump", "-U", db_user, db_name]
+            cmd = ["docker", "exec", container.id[:12], "pg_dump", "-U", db_user, "--no-owner", db_name]
             with open(dump_file, "w") as f:
                 subprocess.run(cmd, stdout=f, check=True)
 
@@ -69,7 +75,7 @@ for container in client.containers.list():
                     backup_dir,
                     f"{container.name}_{db}_{datetime.now():%Y%m%d%H%M}.sql"
                 )
-                cmd = ["docker", "exec", container.id[:12], "pg_dump", "-U", db_user, db]
+                cmd = ["docker", "exec", container.id[:12], "pg_dump", "-U", db_user, "--no-owner", db]
                 with open(dump_file, "w") as f:
                     subprocess.run(cmd, stdout=f, check=True)
 
